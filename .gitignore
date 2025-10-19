@@ -1,6 +1,5 @@
 # Ignore executables
-userInterfaceLocal
-userInterfaceClient
+client
 server
 
 # General C/C++ ignores
