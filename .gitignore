@@ -1,0 +1,129 @@
+# Ignore executables
+userInterfaceLocal
+userInterfaceClient
+server
+
+# General C/C++ ignores
+*~
+*.swp
+*.swo
+*.tmp
+*.log
+*.cache
+*.bak
+
+# Build output directories (common names)
+build/
+build-*/
+cmake-build-*/
+out/
+bin/
+lib/
+lib64/
+target/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeLists.txt.user
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+
+# Generated build system files
+Makefile
+compile_commands.json
+cmake_export_install.cmake
+
+# Object files, libraries, executables
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.elf
+*.app
+
+# Debug and indexing files
+*.pdb
+*.ilk
+*.idb
+*.dSYM/
+*.sym
+*.gcda
+*.gcno
+*.gcov
+
+# Coverage / profiler
+coverage/
+*.prof
+*.profraw
+
+# Package/build tools caches
+.ccache/
+.ccls-cache/
+.vcpkg/
+vcpkg_installed/
+buildtree/
+.packages
+
+# Ninja files
+.ninja_deps
+.ninja_log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Visual Studio / MSVC
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln
+*.vcxproj*
+*.filters
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# macOS / Windows system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Tags and editor metadata
+tags
+TAGS
+*.cscope
+*.ctags
+
+# Generated documentation and artifacts
+docs/html/
+docs/build/
+
+# Optional: vendor or third-party built artifacts (uncomment if appropriate)
+# third_party/*/build/
+# vendor/*/build/
+
+# Keep this repo's source CMake files tracked (uncomment if you accidentally ignored them)
+# !CMakeLists.txt
