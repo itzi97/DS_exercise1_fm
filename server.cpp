@@ -1,3 +1,4 @@
+#include "clientManager.h"
 #include "utils.h"
 #include <iostream>
 #include <list>
@@ -29,8 +30,9 @@ int main(int argc, char **argv) {
       usleep(100);
 
     int clientId = getLastClientID();
+    cout << "Client " << clientId << "connected" << endl;
 
-    thread *th = new thread(resolveClientMessages, clientId);
+    thread *th = new thread(clientManager::resolveClientMessages, clientId);
 
     // TODO: Remove after function done
     exit = true;

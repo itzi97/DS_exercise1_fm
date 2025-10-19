@@ -1,3 +1,4 @@
+#include "clientManager.h"
 #include "utils.h"
 #include <iostream>
 #include <list>
@@ -9,6 +10,24 @@ using namespace std;
 void recvMessagesFromServer(int serverId) {
   // TODO: Actually do something or KYS
   cout << "Hello from client!" << endl;
+
+  vector<unsigned char> buffer;
+
+  do {
+    recvMSG(serverId, buffer);
+    clientManager::msgType_t type = unpack<clientManager::msgType_t>(buffer);
+
+    switch (type) {
+    case clientManager::ack: {
+      cout << "Received ACK from server" << endl;
+    } break;
+    default: {
+      cout << "ERROR " << __FILE__ << ":" << __LINE__
+           << " - Unknown message type received from server: " << type << endl;
+    }
+    }
+
+  } while (false);
   return;
 }
 
