@@ -54,8 +54,6 @@ FileManager::FileManager(string path) {
 	recvMSG(serverId, buffer);
 	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
-
-	cout << "test 3" << endl;
 }
 
 // TODO
@@ -111,6 +109,8 @@ void FileManager::readFile(string fileName, vector<unsigned char> &data) {
 	recvMSG(serverId, buffer);
 	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
+
+	cout << "File " << fileName << " read from server." << endl;
 }
 
 // TODO
@@ -137,4 +137,6 @@ void FileManager::writeFile(string fileName, vector<unsigned char> &data) {
 	recvMSG(serverId, buffer);
 	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
+
+	cout << "File " << fileName << " written to server." << endl;
 }

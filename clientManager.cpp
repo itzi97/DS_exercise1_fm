@@ -70,6 +70,7 @@ void clientManager::resolveClientMessages(int clientId) {
 			buffer.clear();
 			pack(buffer, data.size());
 			packv(buffer, data.data(), data.size());
+
 		} break;
 		case FMWriteFileF: {
 			cout << "[CLIENT " << clientId << "] FM Write File called" << endl;
