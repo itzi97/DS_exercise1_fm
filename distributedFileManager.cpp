@@ -3,15 +3,7 @@
 #include "utils.h"
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 1337
-
-// Helper function to receive ACK from server
-void recvACK(int serverId) {
-	vector<unsigned char> buffer;
-	recvMSG(serverId, buffer);
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
-		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
-}
+#define SERVER_PORT 1067
 
 // TODO
 FileManager::FileManager() : FileManager("") {}
@@ -26,7 +18,10 @@ FileManager::~FileManager() {
 	sendMSG(serverId, buffer);
 
 	// receive ack from server
-	recvACK(serverId);
+	buffer.clear();
+	recvMSG(serverId, buffer);
+	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	// remove from clientConnections map
 	clientManager::clientConnections.erase(this);
@@ -55,9 +50,12 @@ FileManager::FileManager(string path) {
 	sendMSG(serverId, buffer);
 
 	// receive ack from server
-	recvACK(serverId);
+	buffer.clear();
+	recvMSG(serverId, buffer);
+	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
-	clientManager::clientConnections[this] = serverId;
+	cout << "test 3" << endl;
 }
 
 // TODO
@@ -69,9 +67,9 @@ vector<string> FileManager::listFiles() {
 	pack(buffer, clientManager::FMListFilesF);
 	sendMSG(serverId, buffer);
 
-	// receive ack from server and clear buffer
-	recvACK(serverId);
+	// Clear buffer and receive server message
 	buffer.clear();
+	recvMSG(serverId, buffer);
 
 	// receive file list from server and return
 	vector<string> fileList;
@@ -80,6 +78,10 @@ vector<string> FileManager::listFiles() {
 		fileName.resize(unpack<long int>(buffer));
 		unpackv(buffer, (char *)fileName.data(), fileName.size());
 	}
+
+	// receive ack
+	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	return fileList;
 }
@@ -96,15 +98,19 @@ void FileManager::readFile(string fileName, vector<unsigned char> &data) {
 	pack(buffer, fileName.size());
 	packv(buffer, fileName.data(), fileName.size());
 
-	// pack data
-	pack(buffer, data.size());
-	packv(buffer, data.data(), data.size());
-
-	// send file name and data to server
+	// send file name to server
 	sendMSG(serverId, buffer);
 
+	// receive data from server
+	buffer.clear();
+
+	data.resize(unpack<long int>(buffer));
+	unpackv(buffer, (unsigned char *)data.data(), data.size());
+
 	// receive ack from server
-	recvACK(serverId);
+	recvMSG(serverId, buffer);
+	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 }
 
 // TODO
@@ -127,5 +133,8 @@ void FileManager::writeFile(string fileName, vector<unsigned char> &data) {
 	sendMSG(serverId, buffer);
 
 	// receive ack from server
-	recvACK(serverId);
+	buffer.clear();
+	recvMSG(serverId, buffer);
+	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 }

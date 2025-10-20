@@ -10,12 +10,6 @@ class clientManager {
 
 public:
 	typedef enum {
-		// FM Commands
-		ls,
-		lls,
-		upload,
-		download,
-		exit,
 
 		// FM Functions
 		FMConstructor,
