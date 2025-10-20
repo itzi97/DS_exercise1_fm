@@ -1,5 +1,6 @@
 #pragma once
 
+#include "filemanager.h"
 #include "utils.h"
 #include <string>
 
@@ -8,9 +9,31 @@ using namespace std;
 class clientManager {
 
 public:
-  typedef enum { ls, lls, upload, download, exit, ack } msgType_t;
+	typedef enum {
+		// FM Commands
+		ls,
+		lls,
+		upload,
+		download,
+		exit,
 
-  static inline map<string, int> connectionIds;
+		// FM Functions
+		FMConstructor,
+		FMDestructor,
+		FMListFilesF,
+		FMReadFileF,
+		FMWriteFileF,
 
-  static void resolveClientMessages(int clientId);
+		// ack
+		ack
+	} msgType_t;
+
+	static inline map<FileManager *, int> clientConnections;
+	static inline map<int, FileManager *> clientInstances;
+
+	// TODO: This only works for one client
+	static inline bool isConnectionAlive = true;
+	static inline bool isClientDisconnected = false;
+
+	static void resolveClientMessages(int clientId);
 };

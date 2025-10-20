@@ -3,8 +3,9 @@ client
 server
 fileManager
 
-# Ignore testing directory
+# Ignore testing directory and files
 FileManagerDir/
+*.txt
 
 # General C/C++ ignores
 *~
