@@ -28,11 +28,10 @@ void clientManager::resolveClientMessages(int clientId) {
 		} break;
 		case FMDestructor: {
 			cout << "[CLIENT " << clientId << "] FM Destructor called" << endl;
+			delete clientInstances[clientId];
 			clientInstances.erase(clientId);
 
 			exitFM = true;
-
-			delete clientInstances[clientId];
 
 			buffer.clear();
 		} break;
