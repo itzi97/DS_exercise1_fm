@@ -1,6 +1,10 @@
 # Ignore executables
 client
 server
+fileManager
+
+# Ignore testing directory
+FileManagerDir/
 
 # General C/C++ ignores
 *~
@@ -50,6 +54,9 @@ cmake_export_install.cmake
 *.out
 *.elf
 *.app
+
+# Keep specific library
+!libFileManager.a
 
 # Debug and indexing files
 *.pdb
