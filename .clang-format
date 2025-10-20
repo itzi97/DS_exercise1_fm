@@ -1,0 +1,6 @@
+# Use tabs for indentation but keep other formatting rules based on LLVM style.
+BasedOnStyle: LLVM
+UseTab: ForIndentation
+TabWidth: 2
+IndentWidth: 2
+ContinuationIndentWidth: 2

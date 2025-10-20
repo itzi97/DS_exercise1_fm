@@ -8,7 +8,9 @@ void clientManager::resolveClientMessages(int clientId) {
 
   do {
     // receive a packet from client
+    //
     recvMSG(clientId, buffer);
+
     msgType_t type = unpack<msgType_t>(buffer);
 
     switch (type) {
