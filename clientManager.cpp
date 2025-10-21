@@ -28,8 +28,13 @@ void clientManager::resolveClientMessages(int clientId) {
 		} break;
 		case FMDestructor: {
 			cout << "[CLIENT " << clientId << "] FM Destructor called" << endl;
-			delete clientInstances[clientId];
-			clientInstances.erase(clientId);
+
+			// check existence before deleting to avoid operator[] side-effects
+			auto it = clientInstances.find(clientId);
+			if (it != clientInstances.end()) {
+				delete it->second;
+				clientInstances.erase(it);
+			}
 
 			exitFM = true;
 
@@ -37,16 +42,25 @@ void clientManager::resolveClientMessages(int clientId) {
 		} break;
 		case FMListFilesF: {
 			cout << "[CLIENT " << clientId << "] FM List Files called" << endl;
-			// Get local file list
-			auto fileList = clientInstances[clientId]->listFiles();
+
+			// Check instance exists
+			auto it = clientInstances.find(clientId);
+			vector<string> fileList;
+			if (it != clientInstances.end()) {
+				fileList = it->second->listFiles();
+			} else {
+				// no instance: return empty list
+				fileList.clear();
+			}
 
 			// Clear buffer before packing
 			buffer.clear();
 
-			// Send file list to client
-			pack(buffer, fileList.size());
+			// Send file list to client (use long int to be compatible with
+			// unpack<long int>())
+			pack(buffer, (long int)fileList.size());
 			for (auto &fileName : fileList) {
-				pack(buffer, fileName.size());
+				pack(buffer, (long int)fileName.size());
 				packv(buffer, fileName.data(), fileName.size());
 			}
 
@@ -62,12 +76,17 @@ void clientManager::resolveClientMessages(int clientId) {
 			fileName.resize(unpack<long int>(buffer));
 			unpackv(buffer, (char *)fileName.data(), fileName.size());
 
-			// Get data
-			clientInstances[clientId]->readFile(fileName, data);
+			// Get data (check instance)
+			auto it = clientInstances.find(clientId);
+			if (it != clientInstances.end()) {
+				it->second->readFile(fileName, data);
+			} else {
+				data.clear();
+			}
 
 			// Clear buffer and pack data
 			buffer.clear();
-			pack(buffer, data.size());
+			pack(buffer, (long int)data.size());
 			packv(buffer, data.data(), data.size());
 
 		} break;
@@ -86,8 +105,11 @@ void clientManager::resolveClientMessages(int clientId) {
 			data.resize(unpack<long int>(buffer));
 			unpackv(buffer, (unsigned char *)data.data(), data.size());
 
-			// Write file
-			clientInstances[clientId]->writeFile(fileName, data);
+			// Write file (check instance)
+			auto it = clientInstances.find(clientId);
+			if (it != clientInstances.end()) {
+				it->second->writeFile(fileName, data);
+			}
 
 			// Clear buffer
 			buffer.clear();
