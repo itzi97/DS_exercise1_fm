@@ -11,6 +11,11 @@ class clientManager {
 public:
 	typedef enum {
 
+		// Broker messages
+		RegisterServer,
+		RegisterClient,
+		Ping,
+
 		// FM Functions
 		FMConstructor,
 		FMDestructor,
