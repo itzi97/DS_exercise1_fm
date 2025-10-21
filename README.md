@@ -5,8 +5,8 @@ is implemented to work in a distributed system.
 
 ## Dependencies & Compilation
 
-Dependencies managed through `flake.nix` using the (Nix package
-manager)[https://nixos.org/download/]:
+Dependencies managed through `flake.nix` using the [Nix package
+manager](https://nixos.org/download/):
 
 ```sh
 nix flake update
