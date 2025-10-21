@@ -1,8 +1,6 @@
 #include "clientManager.h"
 #include "utils.h"
 #include <iostream>
-#include <list>
-#include <string>
 #include <thread>
 
 using namespace std;
@@ -23,6 +21,11 @@ int main(int argc, char **argv) {
 		cout << "Client " << clientId << " connected" << endl;
 
 		thread *th = new thread(clientManager::resolveClientMessages, clientId);
+
+		// Detach the thread and free the pointer to avoid leaking the thread
+		// object.
+		th->detach();
+		delete th;
 
 		// TODO: Remove after function done
 	} while (!exit);

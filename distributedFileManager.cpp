@@ -10,7 +10,13 @@ FileManager::FileManager() : FileManager("") {}
 
 // TODO: Test if it works
 FileManager::~FileManager() {
-	int serverId = clientManager::clientConnections[this];
+	// check mapping existence
+	auto itmap = clientManager::clientConnections.find(this);
+	if (itmap == clientManager::clientConnections.end()) {
+		// nothing to do
+		return;
+	}
+	int serverId = itmap->second;
 	vector<unsigned char> buffer;
 
 	// send destructor msg
@@ -24,7 +30,7 @@ FileManager::~FileManager() {
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	// remove from clientConnections map
-	clientManager::clientConnections.erase(this);
+	clientManager::clientConnections.erase(itmap);
 
 	// close connection
 	closeConnection(serverId);
@@ -42,8 +48,8 @@ FileManager::FileManager(string path) {
 	// pack type
 	pack(buffer, clientManager::FMConstructor);
 
-	// pack path
-	pack(buffer, path.size());
+	// pack path (use long int to match unpack<long int> on the other side)
+	pack(buffer, (long int)path.size());
 	packv(buffer, path.data(), path.size());
 
 	// send type and path to server
@@ -94,8 +100,8 @@ void FileManager::readFile(string fileName, vector<unsigned char> &data) {
 	// send readFile msg
 	pack(buffer, clientManager::FMReadFileF);
 
-	// pack file name
-	pack(buffer, fileName.size());
+	// pack file name (use long int)
+	pack(buffer, (long int)fileName.size());
 	packv(buffer, fileName.data(), fileName.size());
 
 	// send file name to server
@@ -123,12 +129,12 @@ void FileManager::writeFile(string fileName, vector<unsigned char> &data) {
 	// send writeFile msg
 	pack(buffer, clientManager::FMWriteFileF);
 
-	// pack file name
-	pack(buffer, fileName.size());
+	// pack file name (use long int)
+	pack(buffer, (long int)fileName.size());
 	packv(buffer, fileName.data(), fileName.size());
 
-	// pack data
-	pack(buffer, data.size());
+	// pack data (use long int)
+	pack(buffer, (long int)data.size());
 	packv(buffer, data.data(), data.size());
 
 	// send file name and data to server
