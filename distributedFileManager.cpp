@@ -1,9 +1,7 @@
 #include "clientManager.h"
 #include "filemanager.h"
+#include "msgTypes.h"
 #include "utils.h"
-
-#define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 1067
 
 // TODO
 FileManager::FileManager() : FileManager("") {}
@@ -20,13 +18,13 @@ FileManager::~FileManager() {
 	vector<unsigned char> buffer;
 
 	// send destructor msg
-	pack(buffer, clientManager::FMDestructor);
+	pack(buffer, fmInfo::FMDestructor);
 	sendMSG(serverId, buffer);
 
 	// receive ack from server
 	buffer.clear();
 	recvMSG(serverId, buffer);
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	// remove from clientConnections map
@@ -40,13 +38,14 @@ FileManager::~FileManager() {
 // TODO: Test if it works
 FileManager::FileManager(string path) {
 	// Establish connection to server
-	auto serverConn = initClient(SERVER_IP, SERVER_PORT);
+	auto serverConn =
+	  initClient(std::string(fmInfo::SERVER_IP), fmInfo::SERVER_PORT);
 	int serverId = serverConn.serverId;
 
 	vector<unsigned char> buffer;
 
 	// pack type
-	pack(buffer, clientManager::FMConstructor);
+	pack(buffer, fmInfo::FMConstructor);
 
 	// pack path (use long int to match unpack<long int> on the other side)
 	pack(buffer, (long int)path.size());
@@ -58,7 +57,7 @@ FileManager::FileManager(string path) {
 	// receive ack from server
 	buffer.clear();
 	recvMSG(serverId, buffer);
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	clientManager::clientConnections[this] = serverId;
@@ -70,7 +69,7 @@ vector<string> FileManager::listFiles() {
 	vector<unsigned char> buffer;
 
 	// send listFiles msg
-	pack(buffer, clientManager::FMListFilesF);
+	pack(buffer, fmInfo::FMListFilesF);
 	sendMSG(serverId, buffer);
 
 	// Clear buffer and receive server message
@@ -86,7 +85,7 @@ vector<string> FileManager::listFiles() {
 	}
 
 	// receive ack
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	return fileList;
@@ -98,7 +97,7 @@ void FileManager::readFile(string fileName, vector<unsigned char> &data) {
 	vector<unsigned char> buffer;
 
 	// send readFile msg
-	pack(buffer, clientManager::FMReadFileF);
+	pack(buffer, fmInfo::FMReadFileF);
 
 	// pack file name (use long int)
 	pack(buffer, (long int)fileName.size());
@@ -115,7 +114,7 @@ void FileManager::readFile(string fileName, vector<unsigned char> &data) {
 	unpackv(buffer, (unsigned char *)data.data(), data.size());
 
 	// receive ack from server
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	cout << "File " << fileName << " read from server." << endl;
@@ -127,7 +126,7 @@ void FileManager::writeFile(string fileName, vector<unsigned char> &data) {
 	vector<unsigned char> buffer;
 
 	// send writeFile msg
-	pack(buffer, clientManager::FMWriteFileF);
+	pack(buffer, fmInfo::FMWriteFileF);
 
 	// pack file name (use long int)
 	pack(buffer, (long int)fileName.size());
@@ -143,7 +142,7 @@ void FileManager::writeFile(string fileName, vector<unsigned char> &data) {
 	// receive ack from server
 	buffer.clear();
 	recvMSG(serverId, buffer);
-	if (unpack<clientManager::msgType_t>(buffer) != clientManager::ack)
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
 
 	cout << "File " << fileName << " written to server." << endl;
