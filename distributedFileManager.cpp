@@ -37,12 +37,33 @@ FileManager::~FileManager() {
 
 // TODO: Test if it works
 FileManager::FileManager(string path) {
-	// Establish connection to server
-	auto serverConn =
-	  initClient(std::string(fmInfo::SERVER_IP), fmInfo::SERVER_PORT);
-	int serverId = serverConn.serverId;
+	// Establish connection to broker
+	auto brokerConn =
+	  initClient(std::string(fmInfo::BROKER_IP), fmInfo::BROKER_PORT);
+	int brokerId = brokerConn.serverId;
 
 	vector<unsigned char> buffer;
+
+	// Get server connection to broker
+	pack(buffer, fmInfo::RegisterClient);
+	sendMSG(brokerId, buffer);
+
+	buffer.clear();
+
+	// receive data from server
+	recvMSG(brokerId, buffer);
+
+	string serverIP;
+	serverIP.resize(unpack<long int>(buffer));
+	unpackv(buffer, (unsigned char *)serverIP.data(), serverIP.size());
+
+	// receive ack from server
+	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
+		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
+
+	// Establish connection to server
+	auto serverConn = initClient(serverIP, fmInfo::SERVER_PORT);
+	int serverId = serverConn.serverId;
 
 	// pack type
 	pack(buffer, fmInfo::FMConstructor);
