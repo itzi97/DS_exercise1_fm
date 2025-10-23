@@ -2,6 +2,8 @@
 #include "filemanager.h"
 #include "msgType.h"
 #include "utils.h"
+#include <iostream>
+#include <string>
 
 // TODO
 FileManager::FileManager() : FileManager("") {}
@@ -35,15 +37,59 @@ FileManager::~FileManager() {
 	cout << "Connection " << serverId << " closed." << endl;
 }
 
-// TODO: Test if it works
+// New behavior: ask broker for an active server IP, then connect to that server
 FileManager::FileManager(string path) {
-	// Establish connection to server
-	auto serverConn = initClient(SERVER_IP, SERVER_PORT);
-	int serverId = serverConn.serverId;
+	// Connect to broker and request a server IP
+	auto brokerConn = initClient(BROKER_IP, BROKER_PORT);
+	if (!brokerConn.alive) {
+		cout << "[FM] Failed to connect to broker at " << BROKER_IP << ":"
+		     << BROKER_PORT << endl;
+		return;
+	}
 
 	vector<unsigned char> buffer;
 
+	// Request a server (RegisterClient)
+	pack(buffer, fm::RegisterClient);
+	sendMSG(brokerConn.serverId, buffer);
+
+	// Receive response: [long ipLen][ip bytes][ack]
+	buffer.clear();
+	recvMSG(brokerConn.serverId, buffer);
+
+	long int ipLen = unpack<long int>(buffer);
+	string serverIP;
+	if (ipLen > 0) {
+		serverIP.resize(ipLen);
+		unpackv(buffer, (char *)serverIP.data(), ipLen);
+	} else {
+		cout << "[FM] Broker returned no available server" << endl;
+		// cleanup broker connection and bail out
+		closeConnection(brokerConn.serverId);
+		return;
+	}
+
+	// check ack
+	if (unpack<fm::msgType_t>(buffer) != fm::ack) {
+		cout << "ERROR " << __FILE__ << " " << __LINE__
+		     << " ack expected from broker." << endl;
+		// proceed anyway
+	}
+
+	// close broker connection - we don't need it anymore
+	closeConnection(brokerConn.serverId);
+
+	// Establish connection to server using the IP returned by the broker
+	auto serverConn = initClient(serverIP, SERVER_PORT);
+	if (!serverConn.alive) {
+		cout << "[FM] Failed to connect to server at " << serverIP << ":"
+		     << SERVER_PORT << endl;
+		return;
+	}
+	int serverId = serverConn.serverId;
+
 	// pack type
+	buffer.clear();
 	pack(buffer, fm::FMConstructor);
 
 	// pack path (use long int to match unpack<long int> on the other side)
@@ -62,7 +108,7 @@ FileManager::FileManager(string path) {
 	clientManager::clientConnections[this] = serverId;
 }
 
-// TODO
+// TODO: Test if it works
 vector<string> FileManager::listFiles() {
 	int serverId = clientManager::clientConnections[this];
 	vector<unsigned char> buffer;

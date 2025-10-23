@@ -1,14 +1,24 @@
-#include "clientManager.h"
 #include "msgType.h"
 #include "utils.h"
 #include <iostream>
+#include <limits>
+#include <map>
 #include <thread>
 #include <vector>
 
 using namespace std;
 
-// Server pool stored in a map
-static vector<int> serverPool; // FIFO pool of server connection Ids
+// Info stored for each registered server
+struct ServerInfo {
+	string ip;
+	int connCount;    // number of clients assigned to this server
+	int brokerConnId; // connection id on the broker side
+};
+
+// keyed by broker connection id
+static std::map<int, ServerInfo> serversByConnId;
+// clientConnId -> server brokerConnId
+static std::map<int, int> clientAssignment;
 
 static void forwardLoop(int fromId, int toId) {
 	vector<unsigned char> buffer;
@@ -72,7 +82,8 @@ int main(int argc, char **argv) {
 		int connId = getLastClientID();
 		cout << "[BROKER] Client connected with Id " << connId << endl;
 
-		// TODO: Read and handle connection message
+		// Read and handle connection message
+		buffer.clear();
 		recvMSG(connId, buffer);
 
 		// If message is empty, just close connection
@@ -83,35 +94,98 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		// Unpack message type if buffer isn't empty
-		// 1. If RegisterServer, add to server pool
-		// 2. If RegisterClient, assign to a server from the pool
-		// - If no server available, respond with error
-		// 3. If Ping, respond with ack
+		// Unpack message type
 		auto type = unpack<fm::msgType_t>(buffer);
 		switch (type) {
 		case fm::RegisterServer: {
-			// Add server to pool
-			serverPool.push_back(connId);
-			cout << "[BROKER] Registered server " << connId
-			     << "(pool size: " << serverPool.size() << ")" << endl;
+			// Expect server to send its IP string after the message type.
+			// Layout: [msgType][long int ipLen][ip bytes]
+			if (buffer.size() < (int)sizeof(long int)) {
+				cout << "[BROKER] RegisterServer from " << connId << " without IP"
+				     << endl;
+				closeConnection(connId);
+				break;
+			}
+
+			// unpack ip length and ip string
+			string ip;
+			ip.resize(unpack<long int>(buffer));
+			unpackv(buffer, (char *)ip.data(), ip.size());
+
+			// store server info (no mutex - broker main loop is single-threaded)
+			ServerInfo si;
+			si.ip = ip;
+			si.connCount = 0;
+			si.brokerConnId = connId;
+			serversByConnId[connId] = si;
+
+			cout << "[BROKER] Registered server " << connId << " with IP " << ip
+			     << " (total servers: " << serversByConnId.size() << ")" << endl;
+
+			// respond with ack
+			buffer.clear();
+			pack(buffer, fm::ack);
+			sendMSG(connId, buffer);
+
 		} break;
 		case fm::RegisterClient: {
-			// If server pool empty, respond with error and close connection
-			if (serverPool.empty()) {
+			// A client requests an active server IP.
+			// Choose the server with the smallest connCount (simple load balancing).
+			int chosenServerConnId = -1;
+			string chosenServerIP;
+
+			if (serversByConnId.empty()) {
+				chosenServerConnId = -1;
+			} else {
+				// find server with minimum connCount
+				int minCount = std::numeric_limits<int>::max();
+				for (auto &kv : serversByConnId) {
+					if (kv.second.connCount < minCount) {
+						minCount = kv.second.connCount;
+						chosenServerConnId = kv.first;
+					}
+				}
+				if (chosenServerConnId != -1) {
+					chosenServerIP = serversByConnId[chosenServerConnId].ip;
+					// record assignment (increment the server's connection counter)
+					serversByConnId[chosenServerConnId].connCount++;
+					clientAssignment[connId] = chosenServerConnId;
+				}
+			}
+
+			// If no server available, respond with zero-length IP and close
+			// connection
+			if (chosenServerConnId == -1) {
 				cout << "[BROKER] No servers available for client " << connId << endl;
+				buffer.clear();
+				// pack a zero-length IP as indicator
+				pack(buffer, (long int)0);
+				pack(buffer, fm::ack);
+				sendMSG(connId, buffer);
 				closeConnection(connId);
 			} else {
-				int serverId = serverPool.back();
-				serverPool.pop_back();
-				cout << "[BROKER] Assigned server " << serverId << " to client "
-				     << connId << endl;
-				// TODO: Create function to send serverId to client
+				// send the chosen server IP back to the client:
+				// [long int ipLen][ip bytes][ack]
+				buffer.clear();
+				pack(buffer, (long int)chosenServerIP.size());
+				if (!chosenServerIP.empty())
+					packv(buffer, (char *)chosenServerIP.data(), chosenServerIP.size());
+				pack(buffer, fm::ack);
+				sendMSG(connId, buffer);
+
+				cout << "[BROKER] Assigned server " << chosenServerConnId << " (IP "
+				     << chosenServerIP << ") to client " << connId
+				     << " (server now has "
+				     << serversByConnId[chosenServerConnId].connCount << " clients)"
+				     << endl;
 			}
 		} break;
 		case fm::Ping: {
-			// TODO:
+			// Respond with ack
 			cout << "[BROKER] Received Ping message from " << connId << endl;
+			buffer.clear();
+			pack(buffer, fm::ack);
+			sendMSG(connId, buffer);
 		} break;
 		default: {
 			cout << "[BROKER] Received unknown message type from " << connId << endl;
