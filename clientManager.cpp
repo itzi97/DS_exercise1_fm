@@ -1,4 +1,5 @@
 #include "clientManager.h"
+#include "msgType.h"
 #include "utils.h"
 
 void clientManager::resolveClientMessages(int clientId) {
@@ -8,11 +9,11 @@ void clientManager::resolveClientMessages(int clientId) {
 	do {
 		// receive a packet from client
 		recvMSG(clientId, buffer);
-		msgType_t type = unpack<msgType_t>(buffer);
+		fm::msgType_t type = unpack<fm::msgType_t>(buffer);
 
 		switch (type) {
 
-		case FMConstructor: {
+		case fm::FMConstructor: {
 			cout << "[CLIENT " << clientId << "] FM Constructor called" << endl;
 			// unpack filepath
 			string filePath;
@@ -26,7 +27,7 @@ void clientManager::resolveClientMessages(int clientId) {
 			buffer.clear();
 
 		} break;
-		case FMDestructor: {
+		case fm::FMDestructor: {
 			cout << "[CLIENT " << clientId << "] FM Destructor called" << endl;
 
 			// check existence before deleting to avoid operator[] side-effects
@@ -40,7 +41,7 @@ void clientManager::resolveClientMessages(int clientId) {
 
 			buffer.clear();
 		} break;
-		case FMListFilesF: {
+		case fm::FMListFilesF: {
 			cout << "[CLIENT " << clientId << "] FM List Files called" << endl;
 
 			// Check instance exists
@@ -65,7 +66,7 @@ void clientManager::resolveClientMessages(int clientId) {
 			}
 
 		} break;
-		case FMReadFileF: {
+		case fm::FMReadFileF: {
 			cout << "[CLIENT " << clientId << "] FM Read File called" << endl;
 
 			// get params
@@ -90,7 +91,7 @@ void clientManager::resolveClientMessages(int clientId) {
 			packv(buffer, data.data(), data.size());
 
 		} break;
-		case FMWriteFileF: {
+		case fm::FMWriteFileF: {
 			cout << "[CLIENT " << clientId << "] FM Write File called" << endl;
 
 			// get params
@@ -116,7 +117,7 @@ void clientManager::resolveClientMessages(int clientId) {
 
 		} break;
 		}
-		pack(buffer, ack);
+		pack(buffer, fm::ack);
 		sendMSG(clientId, buffer);
 
 	} while (!exitFM);

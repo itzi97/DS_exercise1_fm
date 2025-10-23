@@ -1,15 +1,11 @@
 #include "clientManager.h"
+#include "msgType.h"
 #include "utils.h"
 #include <iostream>
-#include <string>
 #include <thread>
 #include <vector>
 
 using namespace std;
-
-// TODO: Actually assign EC2 IP
-#define BROKER_IP "127.0.0.1"
-#define BROKER_PORT 42069
 
 // Server pool stored in a map
 static vector<int> serverPool; // FIFO pool of server connection Ids
@@ -92,15 +88,15 @@ int main(int argc, char **argv) {
 		// 2. If RegisterClient, assign to a server from the pool
 		// - If no server available, respond with error
 		// 3. If Ping, respond with ack
-		auto type = unpack<clientManager::msgType_t>(buffer);
+		auto type = unpack<fm::msgType_t>(buffer);
 		switch (type) {
-		case clientManager::RegisterServer: {
+		case fm::RegisterServer: {
 			// Add server to pool
 			serverPool.push_back(connId);
 			cout << "[BROKER] Registered server " << connId
 			     << "(pool size: " << serverPool.size() << ")" << endl;
 		} break;
-		case clientManager::RegisterClient: {
+		case fm::RegisterClient: {
 			// If server pool empty, respond with error and close connection
 			if (serverPool.empty()) {
 				cout << "[BROKER] No servers available for client " << connId << endl;
@@ -113,7 +109,7 @@ int main(int argc, char **argv) {
 				// TODO: Create function to send serverId to client
 			}
 		} break;
-		case clientManager::Ping: {
+		case fm::Ping: {
 			// TODO:
 			cout << "[BROKER] Received Ping message from " << connId << endl;
 		} break;
