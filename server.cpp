@@ -1,5 +1,5 @@
 #include "clientManager.h"
-#include "msgType.h"
+#include "msgTypes.h"
 #include "utils.h"
 #include <arpa/inet.h> // Needed to get IP
 #include <iostream>
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 	// send RegisterServer message + IP
 	{
 		vector<unsigned char> buffer;
-		pack(buffer, fm::RegisterServer);
+		pack(buffer, FMInfo::RegisterServer);
 		pack(buffer, (long int)localIP.size());
 		if (!localIP.empty())
 			packv(buffer, (char *)localIP.data(), localIP.size());
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 		// wait ack
 		buffer.clear();
 		recvMSG(brokerConn.serverId, buffer);
-		if (unpack<fm::msgType_t>(buffer) != fm::ack) {
+		if (unpack<FMInfo::msgType_t>(buffer) != FMInfo::ack) {
 			cout << "[SERVER] Broker did not ack RegisterServer" << endl;
 			// continue anyway
 		} else {

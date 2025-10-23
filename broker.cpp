@@ -1,4 +1,4 @@
-#include "msgType.h"
+#include "msgTypes.h"
 #include "utils.h"
 #include <iostream>
 #include <limits>
@@ -95,9 +95,9 @@ int main(int argc, char **argv) {
 		}
 
 		// Unpack message type
-		auto type = unpack<fm::msgType_t>(buffer);
+		auto type = unpack<FMInfo::msgType_t>(buffer);
 		switch (type) {
-		case fm::RegisterServer: {
+		case FMInfo::RegisterServer: {
 			// Expect server to send its IP string after the message type.
 			// Layout: [msgType][long int ipLen][ip bytes]
 			if (buffer.size() < (int)sizeof(long int)) {
@@ -124,11 +124,11 @@ int main(int argc, char **argv) {
 
 			// respond with ack
 			buffer.clear();
-			pack(buffer, fm::ack);
+			pack(buffer, FMInfo::ack);
 			sendMSG(connId, buffer);
 
 		} break;
-		case fm::RegisterClient: {
+		case FMInfo::RegisterClient: {
 			// A client requests an active server IP.
 			// Choose the server with the smallest connCount (simple load balancing).
 			int chosenServerConnId = -1;
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
 				buffer.clear();
 				// pack a zero-length IP as indicator
 				pack(buffer, (long int)0);
-				pack(buffer, fm::ack);
+				pack(buffer, FMInfo::ack);
 				sendMSG(connId, buffer);
 				closeConnection(connId);
 			} else {
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 				pack(buffer, (long int)chosenServerIP.size());
 				if (!chosenServerIP.empty())
 					packv(buffer, (char *)chosenServerIP.data(), chosenServerIP.size());
-				pack(buffer, fm::ack);
+				pack(buffer, FMInfo::ack);
 				sendMSG(connId, buffer);
 
 				cout << "[BROKER] Assigned server " << chosenServerConnId << " (IP "
@@ -180,11 +180,11 @@ int main(int argc, char **argv) {
 				     << endl;
 			}
 		} break;
-		case fm::Ping: {
+		case FMInfo::Ping: {
 			// Respond with ack
 			cout << "[BROKER] Received Ping message from " << connId << endl;
 			buffer.clear();
-			pack(buffer, fm::ack);
+			pack(buffer, FMInfo::ack);
 			sendMSG(connId, buffer);
 		} break;
 		default: {
