@@ -1,45 +1,38 @@
 #include "clientManager.h"
+#include "msgTypes.h"
 #include "utils.h"
 #include <iostream>
 #include <thread>
 
-#include <arpa/inet.h> // this is for inet_ntoa
-#include <netdb.h>     // this is for gethostbyname
-#include <string>
-#include <unistd.h> // this is for gethostname
+#include <arpa/inet.h>
+#include <cstring>
+#include <linux/if.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 using namespace std;
 
 int main(int argc, char **argv) {
 
 	// Get local IP
+	int fd = socket(AF_INET, SOCK_DGRAM, 0);
+	struct ifreq ifr;
+	// strcpy(ifr.ifr_name, "wlp9s0f0"); // Change to your network interface
+	strcpy(ifr.ifr_name, "ens5"); // Change to your network interface
 
-	char host[256];
+	ioctl(fd, SIOCGIFADDR, &ifr);
+	close(fd);
 
-	// to get local host name
-	if (gethostname(host, sizeof(host)) == -1) {
-		perror("[SERVER] gethostname failed");
-		return 1;
-	}
+	char ip[INET_ADDRSTRLEN];
+	strcpy(ip, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+	std::cout << "[SERVER] Private IP Address: " << ip << std::endl;
 
-	cout << "[SERVER] Host Name: " << host << endl;
+	cout << "[SERVER] opening port " << fmInfo::SERVER_PORT << endl;
+	int serverPortId = initServer(fmInfo::SERVER_PORT);
+	cout << "[SERVER] initialized on port " << fmInfo::SERVER_PORT << endl;
 
-	// to get host information
-	hostent *he = gethostbyname(host);
-	if (he == nullptr) {
-		cerr << "[SERVER] gethostbyname failed" << endl;
-		return 1;
-	}
-
-	// to get and print the first IP address
-	in_addr *addr = (in_addr *)he->h_addr_list[0];
-	cout << "[SERVER] IP Address: " << inet_ntoa(*addr) << endl;
-
+	// Start loop for client conections
 	bool exit = false;
-
-	cout << "Server opening port 1067" << endl;
-	int serverPortId = initServer(1067);
-	cout << "Server initialized on port 1067" << endl;
 
 	do {
 		// TODO: Check client
@@ -47,7 +40,7 @@ int main(int argc, char **argv) {
 			usleep(100);
 
 		int clientId = getLastClientID();
-		cout << "Client " << clientId << " connected" << endl;
+		cout << "[SERVER] Client " << clientId << " connected" << endl;
 
 		thread *th = new thread(clientManager::resolveClientMessages, clientId);
 
@@ -60,6 +53,7 @@ int main(int argc, char **argv) {
 	} while (!exit);
 
 	close(serverPortId);
+	cout << "[SERVER] connection closed" << endl;
 
 	return 0;
 }
