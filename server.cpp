@@ -1,6 +1,7 @@
 #include "clientManager.h"
 #include "msgType.h"
 #include "utils.h"
+#include <arpa/inet.h> // Needed to get IP
 #include <iostream>
 #include <thread>
 
@@ -12,11 +13,45 @@ int main(int argc, char **argv) {
 	cout << "[SERVER] Registering to broker at " << BROKER_IP << ":"
 	     << BROKER_PORT << endl;
 
-	auto brokerConnId = initClient(BROKER_IP, BROKER_PORT);
-	if (!brokerConnId.alive) {
+	// Error in case broker is not alive
+	auto brokerConn = initClient(BROKER_IP, BROKER_PORT);
+	if (!brokerConn.alive) {
 		cout << "[SERVER] Failed to connect to broker at " << BROKER_IP << ":"
 		     << BROKER_PORT << endl;
 		return 1;
+	}
+
+	// determine local IP used for the connection (private IP)
+	struct sockaddr_in localAddr;
+	socklen_t addrLen = sizeof(localAddr);
+	if (getsockname(brokerConn.socket, (struct sockaddr *)&localAddr, &addrLen) !=
+	    0) {
+		cout << "[SERVER] Warning: could not get local socket name, registering "
+		        "127.0.0.1"
+		     << endl;
+		localAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	}
+	string localIP = inet_ntoa(localAddr.sin_addr);
+
+	// send RegisterServer message + IP
+	{
+		vector<unsigned char> buffer;
+		pack(buffer, fm::RegisterServer);
+		pack(buffer, (long int)localIP.size());
+		if (!localIP.empty())
+			packv(buffer, (char *)localIP.data(), localIP.size());
+		sendMSG(brokerConn.serverId, buffer);
+
+		// wait ack
+		buffer.clear();
+		recvMSG(brokerConn.serverId, buffer);
+		if (unpack<fm::msgType_t>(buffer) != fm::ack) {
+			cout << "[SERVER] Broker did not ack RegisterServer" << endl;
+			// continue anyway
+		} else {
+			cout << "[SERVER] Broker acknowledged registration (IP: " << localIP
+			     << ")" << endl;
+		}
 	}
 
 	bool exit = false;
