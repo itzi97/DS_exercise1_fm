@@ -1,6 +1,7 @@
 // Itziar Morales Rodríguez
 #include "clientManager.h"
 #include "msgTypes.h"
+#include "ping.h"
 #include "utils.h"
 #include <iostream>
 #include <netinet/in.h>
@@ -52,6 +53,11 @@ int main(int argc, char **argv) {
 	recvMSG(brokerId, buffer);
 	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 		cout << "ERROR " << __FILE__ << " " << __LINE__ << endl;
+
+	// Create ping function
+	thread *th = new thread(pingHandler, brokerId);
+	th->detach();
+	delete th;
 
 	cout << "[SERVER] opening port " << fmInfo::SERVER_PORT << endl;
 	int serverPortId = initServer(fmInfo::SERVER_PORT);
