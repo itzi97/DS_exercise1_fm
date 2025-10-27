@@ -38,8 +38,6 @@ FileManager::~FileManager() {
 // TODO: Test if it works
 FileManager::FileManager(string path) {
 	// Establish connection to broker
-	cout << "[CLIENT] Connecting to broker at " << fmInfo::BROKER_IP << ":"
-	     << fmInfo::BROKER_PORT << endl;
 	auto brokerConn =
 	  initClient(std::string(fmInfo::BROKER_IP), fmInfo::BROKER_PORT);
 	int brokerId = brokerConn.serverId;
@@ -58,7 +56,7 @@ FileManager::FileManager(string path) {
 
 	string serverIP;
 	serverIP.resize(unpack<long int>(buffer));
-	unpackv(buffer, (unsigned char *)serverIP.data(), serverIP.size());
+	unpackv(buffer, (char *)serverIP.data(), serverIP.size());
 
 	// receive ack from server
 	if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)

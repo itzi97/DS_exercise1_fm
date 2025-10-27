@@ -76,6 +76,9 @@ int main(int argc, char **argv) {
 				}
 			}
 
+			pack(buffer, serverIP.size());
+			packv(buffer, serverIP.data(), serverIP.size());
+
 			registeredServers[serverIP].connectedClients.push_back(connId);
 
 			// clear buffer
