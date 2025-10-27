@@ -26,7 +26,7 @@ add_executable(client msgTypes.h filemanager.h distributedFileManager.cpp
 target_link_libraries(client pthread stdc++fs)
 
 project(broker LANGUAGES CXX)
-add_executable(broker msgTypes.h utils.h utils.cpp server.cpp)
+add_executable(broker msgTypes.h utils.h utils.cpp broker.cpp)
 target_link_libraries(broker pthread stdc++fs)
 
 
