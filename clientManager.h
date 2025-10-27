@@ -1,3 +1,4 @@
+// Itziar Morales Rodríguez
 #pragma once
 
 #include "filemanager.h"
