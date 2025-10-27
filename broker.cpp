@@ -6,6 +6,7 @@
 #include <thread>
 
 #include <arpa/inet.h>
+#include <bits/stdc++.h>
 #include <cstring>
 #include <limits>
 #include <linux/if.h>
@@ -24,7 +25,59 @@ struct ServerData {
 // Registered clients and servers
 static inline map<string, ServerData> registeredServers;
 
-void registerConnection(int connId) { return; }
+void pingConnection(int connId, bool isServer) {
+	// Implements pinging the connection to keep it alive
+	vector<unsigned char> buffer;
+	bool connected = true;
+
+	do {
+		usleep(1000000); // Ping every 10 seconds
+
+		// send ping msg
+		pack(buffer, fmInfo::Ping);
+		sendMSG(connId, buffer);
+
+		// receive ack from connection
+		buffer.clear();
+		recvMSG(connId, buffer);
+		if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
+			connected = false;
+
+	} while (connected);
+
+	// Remove connection rom registered servers or client
+	if (isServer) {
+		// Find server by connId
+		string serverIP;
+		for (auto it : registeredServers) {
+			if (it.second.connId == connId) {
+				serverIP = it.first;
+				break;
+			}
+		}
+		if (!serverIP.empty()) {
+			registeredServers.erase(serverIP);
+			cout << "[SERVER " << connId
+			     << "] disconnected and removed from "
+			        "registered servers"
+			     << endl;
+		}
+	} else {
+		// Find client in all servers
+		for (auto &it : registeredServers) {
+			auto &clients = it.second.connectedClients;
+			auto cit = find(clients.begin(), clients.end(), connId);
+			if (cit != clients.end()) {
+				clients.erase(cit);
+				cout << "[CLIENT " << connId
+				     << "] disconnected and removed from server " << it.first << endl;
+				break;
+			}
+		}
+	}
+
+	return;
+}
 
 int main(int argc, char **argv) {
 
@@ -49,6 +102,8 @@ int main(int argc, char **argv) {
 		recvMSG(connId, buffer);
 		fmInfo::msgType_t type = unpack<fmInfo::msgType_t>(buffer);
 
+		bool isServer = false;
+
 		switch (type) {
 
 		case fmInfo::RegisterServer: {
@@ -62,6 +117,9 @@ int main(int argc, char **argv) {
 			// Register server
 			registeredServers[serverIP] =
 			  ServerData{.connId = connId, .connectedClients = vector<int>()};
+
+			// Set to is server
+			isServer = true;
 
 		} break;
 		case fmInfo::RegisterClient: {
@@ -86,6 +144,9 @@ int main(int argc, char **argv) {
 			packv(buffer, serverIP.data(), serverIP.size());
 
 			registeredServers[serverIP].connectedClients.push_back(connId);
+
+			// Set to not server
+			isServer = false;
 		}
 		}
 
@@ -94,7 +155,7 @@ int main(int argc, char **argv) {
 
 		// closeConnection(connId);
 
-		thread *th = new thread(registerConnection, connId);
+		thread *th = new thread(pingConnection, connId, isServer);
 
 		// Detach the thread and free the pointer to avoid leaking the thread
 		// object.
