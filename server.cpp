@@ -28,9 +28,6 @@ int main(int argc, char **argv) {
 	strcpy(ip, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 	std::cout << "[SERVER] Private IP Address: " << ip << std::endl;
 
-	// Connect to broker
-	cout << "[SERVER] connect to broker and send IP" << endl;
-
 	auto brokerConn =
 	  initClient(std::string(fmInfo::BROKER_IP), fmInfo::BROKER_PORT);
 	int brokerId = brokerConn.serverId;
@@ -47,6 +44,8 @@ int main(int argc, char **argv) {
 	// send type and IP to broker
 	sendMSG(brokerId, buffer);
 
+	cout << "[SERVER] Sent IP to broker, waiting for ack" << endl;
+
 	// receive ack from server
 	buffer.clear();
 	recvMSG(brokerId, buffer);
@@ -57,7 +56,7 @@ int main(int argc, char **argv) {
 	int serverPortId = initServer(fmInfo::SERVER_PORT);
 	cout << "[SERVER] initialized on port " << fmInfo::SERVER_PORT << endl;
 
-	// Start loop for client conections
+	// Start loop for client connections
 	bool exit = false;
 
 	do {
