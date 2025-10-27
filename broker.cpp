@@ -1,3 +1,4 @@
+// Itziar Morales Rodríguez
 #include "msgTypes.h"
 #include "utils.h"
 #include <iostream>
@@ -10,6 +11,8 @@
 #include <linux/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+// TODO: Add ping command
 
 using namespace std;
 

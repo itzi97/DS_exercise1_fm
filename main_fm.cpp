@@ -1,3 +1,4 @@
+// Itziar Morales Rodríguez
 #include "filemanager.h"
 #include <iostream>
 #include <sstream>
