@@ -1,4 +1,3 @@
-#include "clientManager.h"
 #include "msgTypes.h"
 #include "utils.h"
 #include <iostream>
@@ -27,10 +26,10 @@ void registerConnection(int connId) { return; }
 int main(int argc, char **argv) {
 
 	cout << "[BROKER] opening port " << fmInfo::BROKER_PORT << endl;
-	int serverPortId = initServer(fmInfo::BROKER_PORT);
+	int brokerPortId = initServer(fmInfo::BROKER_PORT);
 	cout << "[BROKER] initialized on port " << fmInfo::BROKER_PORT << endl;
 
-	// Start loop for client & server conections
+	// Start loop for client & server connections
 	bool exit = false;
 	vector<unsigned char> buffer;
 
@@ -89,7 +88,7 @@ int main(int argc, char **argv) {
 
 		// closeConnection(connId);
 
-		thread *th = new thread(clientManager::resolveClientMessages, connId);
+		thread *th = new thread(registerConnection, connId);
 
 		// Detach the thread and free the pointer to avoid leaking the thread
 		// object.
@@ -99,7 +98,7 @@ int main(int argc, char **argv) {
 		// TODO: Remove after function done
 	} while (!exit);
 
-	close(serverPortId);
+	close(brokerPortId);
 	cout << "[SERVER] connection closed" << endl;
 
 	return 0;
