@@ -43,6 +43,9 @@ void pingConnection(int connId, bool isServer) {
 		if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
 			connected = false;
 
+		cout << "[BROKER] pinged connection " << connId
+		     << (connected ? " successfully" : " failed") << endl;
+
 	} while (connected);
 
 	// Remove connection rom registered servers or client
