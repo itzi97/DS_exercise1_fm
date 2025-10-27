@@ -135,3 +135,6 @@ docs/build/
 
 # Keep this repo's source CMake files tracked (uncomment if you accidentally ignored them)
 # !CMakeLists.txt
+
+# Ignore zip file
+PR1SISDIS_Itziar_Morales_Rodríguez.zip
