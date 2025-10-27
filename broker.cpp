@@ -31,7 +31,7 @@ void pingConnection(int connId, bool isServer) {
 	bool connected = true;
 
 	do {
-		usleep(1000); // Ping every 1 second
+		usleep(100000); // Ping every 10 second
 
 		// send ping msg
 		pack(buffer, fmInfo::Ping);
@@ -39,9 +39,16 @@ void pingConnection(int connId, bool isServer) {
 
 		// receive ack from connection
 		buffer.clear();
-		recvMSG(connId, buffer);
-		if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
+		try {
+			recvMSG(connId, buffer);
+			if (unpack<fmInfo::msgType_t>(buffer) != fmInfo::ack)
+				connected = false;
+		} catch (const runtime_error &e) {
 			connected = false;
+			cout << "[BROKER] ping to connection " << connId
+			     << " failed: " << e.what() << endl;
+			break;
+		}
 
 		cout << "[BROKER] pinged connection " << connId
 		     << (connected ? " successfully" : " failed") << endl;
