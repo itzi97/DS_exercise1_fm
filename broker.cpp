@@ -54,11 +54,11 @@ int main(int argc, char **argv) {
 			string serverIP;
 			serverIP.resize(unpack<long int>(buffer));
 			unpackv(buffer, (char *)serverIP.data(), serverIP.size());
+			buffer.clear();
 
-			// Register server and clear buffer
+			// Register server
 			registeredServers[serverIP] =
 			  ServerData{.connId = connId, .connectedClients = vector<int>()};
-			buffer.clear();
 
 		} break;
 		case fmInfo::RegisterClient: {
@@ -76,13 +76,13 @@ int main(int argc, char **argv) {
 				}
 			}
 
+			// clear buffer
+			buffer.clear();
+
 			pack(buffer, serverIP.size());
 			packv(buffer, serverIP.data(), serverIP.size());
 
 			registeredServers[serverIP].connectedClients.push_back(connId);
-
-			// clear buffer
-			buffer.clear();
 		}
 		}
 
