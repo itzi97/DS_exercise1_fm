@@ -2,7 +2,10 @@
 #include "clientManager.h"
 #include "filemanager.h"
 #include "msgTypes.h"
+#include "ping.h"
 #include "utils.h"
+
+#include <thread>
 
 // TODO
 FileManager::FileManager() : FileManager("") {}
@@ -51,6 +54,10 @@ FileManager::FileManager(string path) {
 	sendMSG(brokerId, buffer);
 
 	buffer.clear();
+
+	thread *th = new thread(pingHandler, brokerId);
+	th->detach();
+	delete th;
 
 	// receive data from server
 	recvMSG(brokerId, buffer);

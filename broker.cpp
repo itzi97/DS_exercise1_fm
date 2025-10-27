@@ -31,7 +31,7 @@ void pingConnection(int connId, bool isServer) {
 	bool connected = true;
 
 	do {
-		usleep(10000); // Ping every 10 seconds
+		usleep(1000); // Ping every 1 second
 
 		// send ping msg
 		pack(buffer, fmInfo::Ping);
@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 		recvMSG(connId, buffer);
 		fmInfo::msgType_t type = unpack<fmInfo::msgType_t>(buffer);
 
-		bool isServer = false;
+		bool isServer;
 
 		switch (type) {
 
