@@ -31,7 +31,7 @@ void pingConnection(int connId, bool isServer) {
 	bool connected = true;
 
 	do {
-		usleep(1000000); // Ping every 10 seconds
+		usleep(10000); // Ping every 10 seconds
 
 		// send ping msg
 		pack(buffer, fmInfo::Ping);
