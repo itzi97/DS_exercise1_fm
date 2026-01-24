@@ -1,9 +1,28 @@
-# Distributed Systems Programming Exercise 1 - File Manager
+# Distributed Systems File Manager
 
-Assignment for Distributed Systems Programming where the `filemanager.h` class
-is implemented to work in a distributed system.
+A C++ client-server file manager implementing remote file operations via message passing in a distributed systems exercise.
 
-## Dependencies & Compilation
+**Academic Project Details:**
+- **Degree**: Software Engineering
+- **University**: U-tad
+- **Subject**: Distributed Systems Programming
+
+Supports file management (list, create, delete, etc.) on a remote server folder through TCP sockets and structured messages.
+
+## Key Features
+- Client-server architecture for remote file ops (ls, mkdir, rm, etc.).
+- Message passing protocol with enums for commands.
+- Two branches: Basic (direct client-server) and Broker-enabled (intermediary connection management).
+- Multi-client server support.
+- Error handling and response acknowledgments.
+
+## Tech Stack
+- **Language**: C++17
+- **Networking**: POSIX sockets
+- **Build**: Cmake & Makefile
+- **Libraries**: Standard C++ (threads, filesystem, iostream)
+
+## Setup & Run
 
 Dependencies managed through `flake.nix` using the [Nix package
 manager](https://nixos.org/download/):
@@ -13,11 +32,18 @@ nix flake update
 nix develop # enters local shell with dependencies
 ```
 
-To compile:
+To setup and run the project having dependencies installed:
 
 ```sh
-cmake
+# 1. Clone repo
+git clone https://github.com/itzi97/DS_exercise1_fm.git
+cd DS_exercise1_fm
+
+# 2. Build with cmake
+cmake .
 make
+
+# 3. Run broker, server and client
 ```
 
 ## Branch part-1
